@@ -38,6 +38,7 @@ npx skills add adflux-ai/adflux-skills --skill adflux-skills -g -a claude-code -
 
 - 默认安装到当前项目的 `.claude/skills` 等目录；`-g` 安装到用户级
 - `-a` 指定宿主，`--copy` 改为复制而不是链接
+- 在 Agent、CI 等非交互环境中安装时，加 `-y` 跳过确认：`npx -y skills add adflux-ai/adflux-skills --skill adflux-skills -g -y`
 - 没有 Node 时：`git clone https://github.com/adflux-ai/adflux-skills.git`，把 `skills/adflux-skills` 链接或复制到宿主的 skills 目录
 
 ### 🔄 更新技能
