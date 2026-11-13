@@ -46,6 +46,7 @@
 | 现象 | 排查 |
 |---|---|
 | 任务一直 `PENDING` / `RUNNING` | 图片任务在服务端异步执行；超过预期时间用 `task_detail.py` 继续查，必要时联系管理员 |
+| 轮询超时（退出码 1） | 任务仍在执行，用同一 `taskNo` 继续查询，必要时加大 `--max-wait`；禁止重新提交 |
 | `resultUrl` 打不开（403 / 过期） | 签名地址约 1 小时失效，重新调 `task_detail.py` |
 | `CONCURRENCY_TIMEOUT` | 图片并发额度被占满，稍后重试；失败会自动退费 |
 | `check.py` 报未配置环境变量 | 设置 `ADFLUX_API_KEY` 后重开终端 |
