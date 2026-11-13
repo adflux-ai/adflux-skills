@@ -49,7 +49,7 @@
 | `resultUrl` 打不开（403 / 过期） | 签名地址约 1 小时失效，重新调 `task_detail.py` |
 | `CONCURRENCY_TIMEOUT` | 图片并发额度被占满，稍后重试；失败会自动退费 |
 | `check.py` 报未配置环境变量 | 设置 `ADFLUX_API_KEY` 后重开终端 |
-| `check.py` 网络失败 | 检查 `ADFLUX_BASE_URL` 与网络 / 代理 |
+| `check.py` 网络失败 | 先确认网络 / 代理能访问 adflux.cn；私有化部署时再核对自定义地址（可只填域名） |
 | 提示“请更新 adflux” | 执行 `npx skills update adflux-skills` |
 
 ## 安全约定

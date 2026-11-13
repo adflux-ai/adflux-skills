@@ -23,7 +23,7 @@ user-invocable: true
 |---|---|
 | Python | 3.8+，只用标准库，不需要 `pip install` |
 | `ADFLUX_API_KEY` | 必填，形如 `adfk_xxx`，由平台 Key 管理页创建，绑定员工计费 |
-| `ADFLUX_BASE_URL` | 可选，覆盖默认网关地址，形如 `https://<网关域名>/open-api/ai` |
+| `ADFLUX_BASE_URL` | 可选，普通用户无需配置；仅私有化部署时覆盖，可只填域名 |
 | 安全 | Key 只从环境变量读取；禁止把 Key 写进文件、命令行参数或对话输出 |
 
 ## 首次使用
