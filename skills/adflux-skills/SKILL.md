@@ -69,6 +69,19 @@ user-invocable: true
 
 模型编码以接口返回的 `model` 字段为准，不要硬编码或猜测版本号；列表为空时才告知用户当前没有可用模型。
 
+提交前的告知分三档：
+
+| 场景 | 提交前动作 |
+|---|---|
+| 图片单张、用户未指定模型 | 自动选择后一句话说明将使用的模型名称与规格，然后直接提交 |
+| 视频、多图（`--count > 1`）或用户要求高分辨率 / 长时长 | 先 `--estimate` 取 `estimatedCredits`，说明模型名称与预估积分并请用户确认，确认后再提交 |
+| 用户已指定模型 | 直接提交，不再重复确认 |
+
+- 对用户只写模型名称（`name`），不写 `modelCode`
+- 提交前的说明用陈述句，例如「用 Seedream 5.0 生成一张 1024×1024，约需 120 积分」，不要问「你想用哪个模型」
+- 预估积分只取 `--estimate` 的返回值，取不到就省略，不自行估算
+- 用户不确认则不提交，可建议换模型或降低规格
+
 ### 素材引用
 
 | 素材来源 | 做法 |
@@ -109,7 +122,7 @@ user-invocable: true
 ```markdown
 **<图片|视频>已生成 ✅**
 
-**规格**：<宽×高> · `<modelCode>` · <文生图|图生图|文生视频|图生视频> · <时长>
+**规格**：<宽×高> · <模型名称> · <文生图|图生图|文生视频|图生视频> · <时长>
 
 **内容要点**
 - <主体与场景>
@@ -133,11 +146,12 @@ user-invocable: true
 规则：
 
 1. 状态行按 `status` 写：`SUCCESS` → 已生成 ✅；`FAILED` → 生成失败 ❌；`CANCELLED` → 已取消 ⏹。失败或取消时给出 `errorMessage`，跳过其余小节。
-2. 规格只写接口真实返回或提交参数里的值：宽高取 `results[].width/height`，模型取提交的 `modelCode`，时长取 `durationSeconds`；未知项直接省略，不要猜。
+2. 规格只写接口真实返回或提交参数里的值：宽高取 `results[].width/height`，时长取 `durationSeconds`；模型优先取任务详情返回的 `modelName`，没有则用本次提交时 `list_models.py` 返回的 `name`，再没有才用 `modelCode`，都没有就省略。未知项直接省略，不要猜。
 3. 积分只在 `actualCredits` 有值时展示，禁止估算或编造。
 4. 文件优先给 `--download` 落盘的绝对路径；未落盘时给 `resultUrl`，并提示约 1 小时失效。
 5. 可调整方向只建议模型实际支持的能力，以 `capabilities` 为准：分辨率看 `resolution`、比例看 `ratio`、模式看 `generateType`、输出时长看 `minDurationSec`/`maxDurationSec`，参考素材上限看 `maxReference*` / `*ReferenceDurationSec`。
 6. 不要粘贴原始 JSON、`taskNo`、端点或脚本输出，除非用户主动要求。
+7. 模型是自动选择时，在「说明」里加一句「本次自动使用 <模型名称>，如需换模型可直接指定」；用户自己指定模型时不加。
 
 ## 脚本
 
