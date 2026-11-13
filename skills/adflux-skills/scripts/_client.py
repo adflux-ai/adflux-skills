@@ -9,6 +9,7 @@ import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
+from urllib.parse import urlsplit
 
 # 发布给终端用户的默认网关地址；dev / test 用 ADFLUX_BASE_URL 覆盖
 DEFAULT_BASE_URL = "https://www.adflux.cn/open-api/ai"
@@ -34,7 +35,9 @@ def base_url(dry_run=False):
     if not value:
         if dry_run:
             return "<base-url>"
-        raise ConfigError("未配置 ADFLUX_BASE_URL（例如 https://<网关域名>/open-api/ai）")
+        raise ConfigError("未配置服务地址")
+    if not urlsplit(value).path:
+        value += "/open-api/ai"
     return value
 
 

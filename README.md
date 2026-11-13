@@ -76,7 +76,7 @@ $env:ADFLUX_API_KEY = "adfk_xxxxxxxx"
 | 变量 | 必填 | 默认值 | 说明 |
 |------|------|--------|------|
 | `ADFLUX_API_KEY` | ✅ | — | 开放 API 鉴权密钥，`adfk_` 开头 |
-| `ADFLUX_BASE_URL` | ❌ | `https://www.adflux.cn/open-api/ai` | 覆盖网关地址，仅在非默认环境使用 |
+| `ADFLUX_BASE_URL` | ❌ | 内置 | 仅私有化部署时覆盖，普通用户无需配置（可只填域名） |
 
 > ⚠️ API Key 属于机密信息：请只通过环境变量配置，不要写入项目文件、提交到代码仓库，或粘贴到提示词 / 日志中。
 
