@@ -43,8 +43,9 @@ user-invocable: true
 1. **保留用户提示词**：除非用户明确要求改写或翻译，不要重写 prompt。
 2. **不要脑补参数**：用户没指定的比例、分辨率、画质、数量一律不传，交给服务端默认值；不要把示例里的值当成建议值。
 3. **不支持的能力要停下**：站内素材库 ID（`referenceAssetImageIds` 等）、站内字段首期不支持，遇到时明确说明并给替代方案，禁止静默丢弃或映射到别的字段。参考视频/音频可以传，本地文件必须先 `upload.py` 上传，生成时用返回的 `id`（推荐）或 `url`。
-4. **不要自动重试提交**：生成接口无幂等，重复调用会重复冻结积分；只有在没有拿到 `taskNo` 时才重新提交。
+4. **不要自动重试提交**：生成接口无幂等，重复调用会重复冻结积分；只有在没有拿到 `taskNo` 时才重新提交。轮询超时、任务 `FAILED` 或连接中断都算「已拿到 `taskNo`」，不得重新提交。
 5. **失败不要伪造结果**：任务 `FAILED` / `CANCELLED` 时如实汇报 `errorMessage`，不要用旧结果或占位图代替。
+6. **超时不等于失败**：`--watch` 超时只表示本次等待结束，任务仍在执行；用同一 `taskNo` 继续查询，必要时加大 `--max-wait`。不要结束任务，也不要让用户重述需求。
 
 ## 端点
 
@@ -113,6 +114,7 @@ user-invocable: true
 3. 提交：`python scripts/generate_video.py --model <modelCode> --prompt "..." --resolution 1080p --duration 5 --generate-type reference --reference-image-id 123`
    - `--resolution` / `--duration` 的合法值以 `list_models.py` 返回的 `capabilities.resolution`、`minDurationSec`/`maxDurationSec` 为准（分辨率大小写敏感）
 4. 轮询并落盘：`python scripts/task_detail.py --task-no <taskNo> --watch --download ./adflux_results/<taskNo>`
+   - `--watch` 默认最多等 600 秒；视频可能更久，可加 `--max-wait 1800`，超时后继续用同一 `taskNo` 查询，不要重新提交
 5. 视频由平台定时任务结算，轮询到 `SUCCESS` 即完成，结果同样落盘后给本地路径
 
 ## 结果呈现
@@ -177,6 +179,7 @@ user-invocable: true
 | 项 | 说明 |
 |---|---|
 | 幂等 | 生成接口不做幂等，重复调用会重复冻结积分 |
+| 等待 | `--watch` 默认最多等 600 秒；超时只表示本次等待结束，任务仍在执行，继续用同一 `taskNo` 查询，不要重新提交 |
 | 结果 URL | 签名地址约 1 小时失效；建议用 `task_detail.py --download` 落盘，或过期后重新查询 |
 | 并发 | 图片生成与站内共享并发额度，拿不到许可会以 `CONCURRENCY_TIMEOUT` 失败并退费 |
 | 限流 | 没有 Key 级限流，也不提供开放配额承诺；不要依赖站内通道限流值 |
