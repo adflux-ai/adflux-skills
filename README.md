@@ -57,7 +57,7 @@ npx skills ls -g
 
 还没有 Key 时，先在 adflux 平台创建：
 
-1. 打开 [adflux](https://adflux.cn/)。
+1. 打开 [adflux](https://www.adflux.cn)。
 2. 登录后进入「开放 API / Key 管理」。
 3. 新建 Key，选择一个本租户员工作为计费对象。
 4. 创建成功后立即复制（明文只展示一次，关闭后无法再次查看）。
