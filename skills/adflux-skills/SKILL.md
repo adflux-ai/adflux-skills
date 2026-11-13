@@ -34,7 +34,7 @@ user-invocable: true
 2. 检测 Python：依次尝试 `python`、`py -3`、`python3`，静默选第一个可用且版本 ≥ 3.8 的解释器，不要把命令或版本号抛给用户。
    - 都不可用时，只回一句：「这个技能需要先装一下 Python（免费），装完告诉我一声就能继续」，并给出 https://www.python.org/downloads/ ；Windows 提醒安装时勾选 "Add python.exe to PATH"。
    - 不要解释 Python 是什么，不要列 pip、环境变量或排查步骤；用户确认装好后重新检测一次再继续。
-3. 若未配置 `ADFLUX_API_KEY`，引导用户到 [adflux](https://www.adflux.cn) 的「开放 API / Key 管理」新建 Key 并绑定本租户员工；明文只展示一次。不要要求用户把 Key 贴到对话里，让用户自行写入环境变量。
+3. 若未配置 `ADFLUX_API_KEY`，引导用户到 [adflux](https://adflux.cn) 的「开放 API / Key 管理」新建 Key 并绑定本租户员工；明文只展示一次。不要要求用户把 Key 贴到对话里，让用户自行写入环境变量。
 4. 设置环境变量后需要重开终端，再用检测到的解释器运行 `scripts/check.py` 自检。
 5. 自检通过后，用一次最低规格生成验证链路，再处理正式需求。
 
