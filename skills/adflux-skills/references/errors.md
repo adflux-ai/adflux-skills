@@ -37,7 +37,7 @@
 | 参考视频/音频时长超限 | 按 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec` 调整 |
 | 参考素材是内网地址 | 换成公网可访问的 http/https URL |
 | 分辨率/比例的大小写与返回值不一致 | 按 `capabilities.resolution` / `capabilities.ratio` 原样传（如 `480P`、`768P`、`2K`） |
-| 传了站内素材库 ID 字段（`referenceAssetImageIds` 等） | 不支持，改用 `/material/upload` 返回的 `reference*MaterialIds` 或公网 URL |
+| 传了站内素材库 ID 等内部字段 | 不支持，改用 `/material/upload` 返回的 `reference*MaterialIds` 或公网 URL |
 | 素材 ID 不存在 / 类型不符 / 跨员工 | 确认 `id` 来自当前 Key 绑定员工的 `upload.py` 上传结果，且媒体类型与字段匹配（图片 / 视频 / 音频） |
 | 把素材 ID 传进了 `--reference` / `--first-frame-url` 等 URL 参数 | 会报「需要 http/https URL」；本地素材改用 `--reference-image-id` / `--reference-video-id` / `--reference-audio-id` / `--first-frame-id` / `--last-frame-id` |
 

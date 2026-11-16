@@ -230,15 +230,14 @@ Authorization: Bearer <ADFLUX_API_KEY>
 
 - **无幂等**：重复提交会重复冻结积分，重试前先确认上次是否已返回 `taskNo`
 - **结果 URL 1 小时失效**：用 `task_detail.py --download` 落盘，或过期后重新查询
-- **并发共享**：图片生成与站内业务共用并发额度，高峰可能 `CONCURRENCY_TIMEOUT` 后自动退费
-- **内部字段不开放**：站内素材库 ID（`referenceAssetImageIds` 等）、站内字段传了会被拒绝或覆盖；上传素材 ID（`reference*MaterialIds` / `firstFrameMaterialId` / `lastFrameMaterialId`）支持
+- **并发共享**：图片生成与其他业务共用并发额度，高峰可能 `CONCURRENCY_TIMEOUT` 后自动退费
+- **字段范围**：仅支持本文档列出的开放字段；上传素材 ID（`reference*MaterialIds` / `firstFrameMaterialId` / `lastFrameMaterialId`）支持，其他内部字段传了会被拒绝或覆盖
 - **素材要求**：参考视频 / 参考音频必须先 `upload.py` 上传；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
 
-## 🤝 贡献
+## 🤝 反馈与支持
 
-- 改动脚本后运行 `python -m unittest discover -s tests`
-- 接口契约变化时同步 `docs/adflux-open-api.md` 与 `SKILL.md`
-- 合并到 `master` 即发布；GitHub 仓为对外公开镜像
+- 使用中遇到问题或有建议，请在本仓库提 Issue，我们会按 Issue 跟进
+- 本仓库为 adflux 技能发布仓，安装与更新以 README 顶部的命令为准
 
 ## 📄 License
 
