@@ -107,11 +107,13 @@ user-invocable: true
 
 1. `python scripts/list_models.py --type video`
 2. 按 `generateType` 与 `capabilities` 准备素材：
+   - `text`（默认）：纯文生视频，只传提示词，不要传任何参考素材或首尾帧
    - `reference`：参考图（`--reference <公网URL>` 或 `--reference-image-id <ID>`）与参考视频（`--reference-video <URL>` 或 `--reference-video-id <ID>`）至少一个；参考音频（`--reference-audio` / `--reference-audio-id`）不能单独使用，须搭配至少 1 个参考图或视频
    - `frame`：首帧（`--first-frame-url` 或 `--first-frame-id`）+ 尾帧（`--last-frame-url` 或 `--last-frame-id`）
    - 本地上传的素材用 `upload.py` 返回的 `id` 传 `--reference-*-id` / `--first-frame-id` / `--last-frame-id`；只有参考视频/音频必须来自上传，参考图可以是任意公网 URL
    - 单段/合计时长不要超过 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec`
-3. 提交：`python scripts/generate_video.py --model <modelCode> --prompt "..." --resolution 1080p --duration 5 --generate-type reference --reference-image-id 123`
+3. 提交：`python scripts/generate_video.py --model <modelCode> --prompt "..." --resolution 1080p --duration 5`
+   - 不传 `--generate-type` 即纯文生视频（`text`）；带素材时显式加 `--generate-type reference` / `--generate-type frame`
    - `--resolution` / `--duration` 的合法值以 `list_models.py` 返回的 `capabilities.resolution`、`minDurationSec`/`maxDurationSec` 为准（分辨率大小写敏感）
 4. 轮询并落盘：`python scripts/task_detail.py --task-no <taskNo> --watch --download ./adflux_results/<taskNo>`
    - `--watch` 默认最多等 600 秒；视频可能更久，可加 `--max-wait 1800`，超时后继续用同一 `taskNo` 查询，不要重新提交
@@ -151,7 +153,7 @@ user-invocable: true
 2. 规格只写接口真实返回或提交参数里的值：宽高取 `results[].width/height`，时长取 `durationSeconds`；模型优先取任务详情返回的 `modelName`，没有则用本次提交时 `list_models.py` 返回的 `name`，再没有才用 `modelCode`，都没有就省略。未知项直接省略，不要猜。
 3. 积分只在 `actualCredits` 有值时展示，禁止估算或编造。
 4. 文件优先给 `--download` 落盘的绝对路径；未落盘时给 `resultUrl`，并提示约 1 小时失效。
-5. 可调整方向只建议模型实际支持的能力，以 `capabilities` 为准：分辨率看 `resolution`、比例看 `ratio`、模式看 `generateType`、输出时长看 `minDurationSec`/`maxDurationSec`，参考素材上限看 `maxReference*` / `*ReferenceDurationSec`。
+5. 可调整方向只建议模型实际支持的能力，以 `capabilities` 为准：分辨率看 `resolution`、比例看 `ratio`、模式看 `generateType`（`text` 为隐式模式，不会出现在该字段中）、输出时长看 `minDurationSec`/`maxDurationSec`，参考素材上限看 `maxReference*` / `*ReferenceDurationSec`。
 6. 不要粘贴原始 JSON、`taskNo`、端点或脚本输出，除非用户主动要求。
 7. 模型是自动选择时，在「说明」里加一句「本次自动使用 <模型名称>，如需换模型可直接指定」；用户自己指定模型时不加。
 

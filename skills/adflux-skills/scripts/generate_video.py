@@ -5,7 +5,7 @@ import argparse
 
 import _client as client
 
-GENERATE_TYPES = ["reference", "frame"]
+GENERATE_TYPES = ["text", "reference", "frame"]
 
 
 def build_payload(args):
@@ -34,6 +34,13 @@ def build_payload(args):
 def validate_args(parser, args):
     if not args.prompt.strip():
         parser.error("--prompt 不能为空")
+    if args.generate_type == "text":
+        if (args.reference or args.reference_image_id or args.reference_video
+                or args.reference_video_id or args.reference_audio or args.reference_audio_id
+                or args.first_frame_url or args.first_frame_id
+                or args.last_frame_url or args.last_frame_id):
+            parser.error("generateType=text 为纯文生视频，不能同时传参考素材或首尾帧；"
+                         "需要素材时请用 --generate-type reference / frame")
     if args.generate_type == "reference" and not (
             args.reference or args.reference_video
             or args.reference_image_id or args.reference_video_id):
@@ -57,7 +64,8 @@ def main():
     parser.add_argument("--resolution", required=True, help="分辨率，取值以 list_models.py 返回的 capabilities.resolution 为准（大小写敏感）")
     parser.add_argument("--duration", required=True, type=int, help="时长（秒），范围以 capabilities.minDurationSec / maxDurationSec 为准")
     parser.add_argument("--aspect-ratio", help="画面比例，默认 9:16，取值见 capabilities.ratio")
-    parser.add_argument("--generate-type", required=True, choices=GENERATE_TYPES, help="生成方式")
+    parser.add_argument("--generate-type", choices=GENERATE_TYPES, default="text",
+                        help="生成方式：text（纯文生视频，默认）/ reference / frame")
     parser.add_argument("--reference", action="append", metavar="URL", help="参考图公网 URL，可重复")
     parser.add_argument("--reference-image-id", action="append", type=int, metavar="ID",
                         help="参考图素材 ID（upload.py 返回的 id），可重复")

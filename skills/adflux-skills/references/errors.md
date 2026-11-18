@@ -30,7 +30,7 @@
 | 原因 | 修正 |
 |---|---|
 | `prompt` 为空或只有空白 | 提供非空提示词 |
-| 视频未传 `generateType` | 显式传 `reference` / `frame` |
+| `text` 模式又传了参考素材 / 首尾帧 | 纯文生视频不要传素材；要带素材时显式加 `--generate-type reference` / `--generate-type frame` |
 | `reference` 既没传参考图也没传参考视频 | 至少一个 `--reference <公网URL>`、`--reference-image-id` 或 `--reference-video` / `--reference-video-id` |
 | `frame` 缺首帧或尾帧 | 同时传首帧与尾帧（URL 或素材 ID） |
 | 参考视频/音频用了外部直链 | 先用 `upload.py` 上传，再传返回的 `id`（推荐）或 `url`（服务端需解析时长计费） |
