@@ -130,7 +130,7 @@ python3 skills/adflux-skills/scripts/generate_image.py --model <modelCode> --pro
 
 ```bash
 python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --prompt "镜头缓慢推进" \
-  --resolution 1080p --duration 5 --generate-type reference --reference https://example.com/a.jpg
+  --resolution 720p --duration 5 --generate-type reference --reference https://example.com/a.jpg
 ```
 
 ### 轮询并下载
