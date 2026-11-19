@@ -108,7 +108,7 @@ user-invocable: true
 1. `python scripts/list_models.py --type video`
 2. 按 `generateType` 与 `capabilities` 准备素材：
    - `text`（默认，隐式支持，不会出现在 `capabilities.generateType` 中）：纯文生视频，只传提示词，不要传任何参考素材或首尾帧
-   - `reference`：参考图（`--reference <公网URL>` 或 `--reference-image-id <ID>`）与参考视频（`--reference-video <URL>` 或 `--reference-video-id <ID>`）至少一个；参考音频（`--reference-audio` / `--reference-audio-id`）不能单独使用，须搭配至少 1 个参考图或视频
+   - `reference`：参考图（`--reference <公网URL>` 或 `--reference-image-id <ID>`）、参考视频（`--reference-video <URL>` 或 `--reference-video-id <ID>`）、参考音频（`--reference-audio` / `--reference-audio-id`）至少一个；参考音频单独使用仅 Seedance 2.5 系列（含 flash）支持，2.0 系列仍须搭配至少 1 个参考图或视频，由后端校验拒绝
    - `frame`：首帧（`--first-frame-url` 或 `--first-frame-id`）+ 尾帧（`--last-frame-url` 或 `--last-frame-id`）
    - 本地上传的素材用 `upload.py` 返回的 `id` 传 `--reference-*-id` / `--first-frame-id` / `--last-frame-id`；只有参考视频/音频必须来自上传，参考图可以是任意公网 URL
    - 单段/合计时长不要超过 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec`

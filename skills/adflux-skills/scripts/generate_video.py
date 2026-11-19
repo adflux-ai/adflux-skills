@@ -43,9 +43,10 @@ def validate_args(parser, args):
                          "需要素材时请用 --generate-type reference / frame")
     if args.generate_type == "reference" and not (
             args.reference or args.reference_video
-            or args.reference_image_id or args.reference_video_id):
+            or args.reference_image_id or args.reference_video_id
+            or args.reference_audio or args.reference_audio_id):
         parser.error("generateType=reference 时至少需要一个 --reference / --reference-video / "
-                     "--reference-image-id / --reference-video-id")
+                     "--reference-audio（或对应素材 ID）")
     if args.generate_type == "frame":
         if args.first_frame_url and args.first_frame_id:
             parser.error("首帧只能传 --first-frame-url 或 --first-frame-id 之一")
