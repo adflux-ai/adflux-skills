@@ -31,7 +31,12 @@
 |---|---|
 | `prompt` 为空或只有空白 | 提供非空提示词 |
 | `text` 模式又传了参考素材 / 首尾帧 | 纯文生视频不要传素材；要带素材时显式加 `--generate-type reference` / `--generate-type frame` |
-| `reference` 没传任何参考素材 | 至少一个 `--reference <公网URL>`、`--reference-image-id`、`--reference-video` / `--reference-video-id` 或 `--reference-audio` / `--reference-audio-id`（纯音频仅 2.5 系列支持，2.0 系列会被后端拒绝） |
+| `reference` 没传任何参考素材 | 至少一个 `--reference <公网URL>`、`--reference-image-id`、`--reference-video` / `--reference-video-id` 或 `--reference-audio` / `--reference-audio-id`（纯音频仅 2.5 系列支持，2.0 系列返回 400） |
+| 视频编辑 / 延长时模型不支持该任务类型 | 用 `list_models.py --type video` 确认 `capabilities.videoTaskTypes` 含 `edit` / `extend`，换支持该类型的模型 |
+| `edit` 的原片不是恰好 1 个 | 只传一个原片；`extend` 的第一个视频即原片，其余是额外参考视频 |
+| `edit` / `extend` 传了首尾帧素材 | 去掉 `--first-frame-*` / `--last-frame-*`，原片改用 `--reference-video-id` / `--reference-video` |
+| 原片用了外链、未上传或属于他人 | 先 `upload.py` 上传，传当前 Key 绑定员工的素材 `id`（或上传返回的 `url`） |
+| `extend` 的新增片段时长不在 4~30s | 调整 `--duration`；`edit` 的 `--duration` 取 `upload.py` 返回的 `duration` 即可（服务端会覆盖） |
 | `frame` 缺首帧或尾帧 | 同时传首帧与尾帧（URL 或素材 ID） |
 | 参考视频/音频用了外部直链 | 先用 `upload.py` 上传，再传返回的 `id`（推荐）或 `url`（服务端需解析时长计费） |
 | 参考视频/音频时长超限 | 按 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec` 调整 |
@@ -47,7 +52,7 @@
 |---|---|
 | 任务一直 `PENDING` / `RUNNING` | 图片任务在服务端异步执行；超过预期时间用 `task_detail.py` 继续查，必要时联系管理员 |
 | 轮询超时（退出码 1） | 任务仍在执行，用同一 `taskNo` 继续查询，必要时加大 `--max-wait`；禁止重新提交 |
-| `resultUrl` 打不开（403 / 过期） | 签名地址约 1 小时失效，重新调 `task_detail.py` |
+| `resultUrl` 打不开（403 / 过期） | 结果 URL 按上游留存约 7 天有效，过期后重新调 `task_detail.py` |
 | `CONCURRENCY_TIMEOUT` | 图片并发额度被占满，稍后重试；失败会自动退费 |
 | `check.py` 报未配置环境变量 | 设置 `ADFLUX_API_KEY` 后重开终端 |
 | `check.py` 网络失败 | 先确认网络 / 代理能访问 adflux.cn；私有化部署时再核对自定义地址（可只填域名） |

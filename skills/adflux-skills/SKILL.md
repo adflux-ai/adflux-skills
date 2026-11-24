@@ -1,6 +1,6 @@
 ---
 name: adflux-skills
-description: 通过 adflux 开放 API 生成图片和视频（文生图、参考图生视频、首尾帧生视频），查询可用模型、积分预估与任务结果。当用户要求生成图片、生成视频、查看可用模型或查询生成任务状态时使用。
+description: 通过 adflux 开放 API 生成图片和视频（文生图、参考图生视频、首尾帧生视频、视频编辑、视频延长），查询可用模型、积分预估与任务结果。当用户要求生成图片、生成视频、编辑已有视频、延长已有视频、查看可用模型或查询生成任务状态时使用。
 user-invocable: true
 ---
 
@@ -11,7 +11,7 @@ user-invocable: true
 ## 何时使用
 
 - 用户要生成图片（文生图、参考图、多图、指定尺寸/画质）
-- 用户要生成视频（文生视频、参考图生视频、首尾帧）
+- 用户要生成视频（文生视频、参考图生视频、首尾帧、视频编辑、视频延长）
 - 用户要查看当前可用模型及其参数能力
 - 用户要查询某次生成任务的进度或结果
 
@@ -67,6 +67,7 @@ user-invocable: true
 
 - 图片：优先 `seedream` 系列，其次该类型第一个可用模型
 - 视频：优先 `seedance` 系列，其次该类型第一个可用模型
+- 视频编辑 / 延长：先按 `capabilities.videoTaskTypes` 过滤，只在该值包含 `edit` / `extend` 的模型里选；没有可用模型时直接告知用户，不要提交后吃 400
 
 模型编码以接口返回的 `model` 字段为准，不要硬编码或猜测版本号；列表为空时才告知用户当前没有可用模型。
 
@@ -101,7 +102,7 @@ user-invocable: true
 3. 提交：`python scripts/generate_image.py --model <modelCode> --prompt "..." --count 1`
    - 本地参考图先 `upload.py` 上传，再传 `--reference-image-id <ID>`（也可直接传公网 URL `--reference`）
 4. 轮询并落盘：`python scripts/task_detail.py --task-no <taskNo> --watch --download ./adflux_results/<taskNo>`
-5. 把 `localPaths` 中的绝对路径给用户；未落盘时再给 `resultUrl`，并说明约 1 小时失效
+5. 把 `localPaths` 中的绝对路径给用户；未落盘时再给 `resultUrl`，并说明按上游留存约 7 天有效
 
 ### 生成视频
 
@@ -112,11 +113,18 @@ user-invocable: true
    - `frame`：首帧（`--first-frame-url` 或 `--first-frame-id`）+ 尾帧（`--last-frame-url` 或 `--last-frame-id`）
    - 本地上传的素材用 `upload.py` 返回的 `id` 传 `--reference-*-id` / `--first-frame-id` / `--last-frame-id`；只有参考视频/音频必须来自上传，参考图可以是任意公网 URL
    - 单段/合计时长不要超过 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec`
+   - 参考素材上限按所选模型取，**2.5 与 2.5 flash 不同**：2.5 为图 30 / 视频 10 / 音频 10，2.5 flash 为图 10 / 视频 5 / 音频 5；统一看 `capabilities.maxReferenceImageCount` / `maxReferenceVideoCount` / `maxReferenceAudioCount`，不要按模型名硬套
+   - 视频编辑 / 延长用 `--video-task-type` 显式声明（仅当 `capabilities.videoTaskTypes` 含该值）：
+     - `edit`（视频编辑）：必须恰好 1 个原片，通过 `--reference-video-id <ID>`（或 `--reference-video <URL>`）传入，长度 4~30s；`--duration` 取 `upload.py` 返回的 `duration`（服务端仍会用原片元数据覆盖）；不能传首尾帧；可同时传参考图（`--reference`），提示词用 `@图片N` 引用
+     - `extend`（视频延长）：至少 1 个视频，第一个为原片，其余为额外参考视频；`--duration` 传本次**新增片段**秒数（4~30s，上限看模型能力），产物只含续接片段，不含原片；原片必须放第一位，参考视频只用一种来源（全部 `--reference-video` 或全部 `--reference-video-id`，混用会改变顺序）；可叠加参考图 / 参考音频
+     - 两者固定 `generateType=reference`；`--resolution` 仍必填，取值以 `capabilities.resolution` 为准（如 480p / 720p），分辨率按传入档位生效；编辑 / 延长不支持设置比例，输出比例由服务端按原片覆盖
 3. 提交：`python scripts/generate_video.py --model <modelCode> --prompt "..." --resolution 720p --duration 5`
    - 不传 `--generate-type` 即纯文生视频（`text`）；带素材时显式指定：
      - `--generate-type reference --reference https://example.com/a.jpg`
      - `--generate-type frame --first-frame-url https://example.com/a.jpg --last-frame-url https://example.com/b.jpg`
-   - `--resolution` / `--duration` 的合法值以 `list_models.py` 返回的 `capabilities.resolution`、`minDurationSec`/`maxDurationSec` 为准（分辨率大小写敏感）
+   - 编辑原片：`--video-task-type edit --resolution 720p --reference-video-id <原片ID> --reference https://example.com/product.jpg --duration <原片时长> --prompt "把 @图片1 中的商品替换到 @视频1 对应位置，保持镜头、节奏、时长和其他画面不变"`
+   - 延长原片：`--video-task-type extend --resolution 720p --reference-video-id <原片ID> --duration 6 --prompt "向后延长 @视频1，镜头继续推进，补充第二个卖点"`
+   - 普通生成的 `--resolution` 以 `capabilities.resolution` 为准（大小写敏感）；编辑 / 延长按 480p / 720p 传；`--duration` 合法值以 `capabilities.minDurationSec` / `maxDurationSec` 为准
 4. 轮询并落盘：`python scripts/task_detail.py --task-no <taskNo> --watch --download ./adflux_results/<taskNo>`
    - `--watch` 默认最多等 600 秒；视频可能更久，可加 `--max-wait 1800`，超时后继续用同一 `taskNo` 查询，不要重新提交
 5. 视频由平台定时任务结算，轮询到 `SUCCESS` 即完成，结果同样落盘后给本地路径
@@ -128,7 +136,7 @@ user-invocable: true
 ```markdown
 **<图片|视频>已生成 ✅**
 
-**规格**：<宽×高> · <模型名称> · <文生图|图生图|文生视频|图生视频> · <时长>
+**规格**：<宽×高> · <模型名称> · <文生图|图生图|文生视频|参考生成|视频编辑|视频延长> · <时长>
 
 **内容要点**
 - <主体与场景>
@@ -152,10 +160,10 @@ user-invocable: true
 规则：
 
 1. 状态行按 `status` 写：`SUCCESS` → 已生成 ✅；`FAILED` → 生成失败 ❌；`CANCELLED` → 已取消 ⏹。失败或取消时给出 `errorMessage`，跳过其余小节。
-2. 规格只写接口真实返回或提交参数里的值：宽高取 `results[].width/height`，时长取 `durationSeconds`；模型优先取任务详情返回的 `modelName`，没有则用本次提交时 `list_models.py` 返回的 `name`，再没有才用 `modelCode`，都没有就省略。未知项直接省略，不要猜。
+2. 规格只写接口真实返回或提交参数里的值：宽高取 `results[].width/height`，时长取 `durationSeconds`；视频任务的类型取任务详情的 `videoTaskType`（`edit` → 视频编辑，`extend` → 视频延长，`reference` → 参考生成）；模型优先取任务详情返回的 `modelName`，没有则用本次提交时 `list_models.py` 返回的 `name`，再没有才用 `modelCode`，都没有就省略。未知项直接省略，不要猜。
 3. 积分只在 `actualCredits` 有值时展示，禁止估算或编造。
-4. 文件优先给 `--download` 落盘的绝对路径；未落盘时给 `resultUrl`，并提示约 1 小时失效。
-5. 可调整方向只建议模型实际支持的能力，以 `capabilities` 为准：分辨率看 `resolution`、比例看 `ratio`、模式看 `generateType`（`text` 为隐式模式，不会出现在该字段中）、输出时长看 `minDurationSec`/`maxDurationSec`，参考素材上限看 `maxReference*` / `*ReferenceDurationSec`。
+4. 文件优先给 `--download` 落盘的绝对路径；未落盘时给 `resultUrl`，并提示按上游留存期（约 7 天）有效。
+5. 可调整方向只建议模型实际支持的能力，以 `capabilities` 为准：分辨率看 `resolution`、比例看 `ratio`、模式看 `generateType`（`text` 为隐式模式，不会出现在该字段中）、能否编辑 / 延长看 `videoTaskTypes`、输出时长看 `minDurationSec`/`maxDurationSec`，参考素材上限看 `maxReference*` / `*ReferenceDurationSec`。
 6. 不要粘贴原始 JSON、`taskNo`、端点或脚本输出，除非用户主动要求。
 7. 模型是自动选择时，在「说明」里加一句「本次自动使用 <模型名称>，如需换模型可直接指定」；用户自己指定模型时不加。
 
@@ -166,7 +174,7 @@ user-invocable: true
 | `scripts/check.py` | 自检环境变量与连通性 |
 | `scripts/list_models.py` | 列出可用模型 |
 | `scripts/generate_image.py` | 图片预估 / 提交（`--estimate` 只预估） |
-| `scripts/generate_video.py` | 视频预估 / 提交（`--estimate` 只预估） |
+| `scripts/generate_video.py` | 视频预估 / 提交（`--estimate` 只预估；`--video-task-type` 支持 reference / edit / extend） |
 | `scripts/task_detail.py` | 任务详情，`--watch` 自动轮询，`--download DIR` 下载结果到本地 |
 | `scripts/upload.py` | 上传本地图片 / 视频 / 音频 |
 
@@ -184,7 +192,7 @@ user-invocable: true
 |---|---|
 | 幂等 | 生成接口不做幂等，重复调用会重复冻结积分 |
 | 等待 | `--watch` 默认最多等 600 秒；超时只表示本次等待结束，任务仍在执行，继续用同一 `taskNo` 查询，不要重新提交 |
-| 结果 URL | 签名地址约 1 小时失效；建议用 `task_detail.py --download` 落盘，或过期后重新查询 |
+| 结果 URL | 生成结果指向上游 OSS，按上游留存期（7 天）有效；建议用 `task_detail.py --download` 落盘。1 小时失效只针对自己上传素材的预览 URL，素材 `id` 长期有效 |
 | 并发 | 图片生成与其他业务共享并发额度，拿不到许可会以 `CONCURRENCY_TIMEOUT` 失败并退费 |
 | 限流 | 没有 Key 级限流，也不提供开放配额承诺；不要依赖其他通道的限流值 |
 | 素材 | 参考图可直接传公网 URL；**参考视频/音频必须先 `upload.py` 上传**；上传返回的 `id` 长期有效，优先用素材 ID 引用，`url` 只是 1 小时预览地址；内网、回环、链路本地地址会被拒绝 |

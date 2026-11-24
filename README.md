@@ -13,6 +13,8 @@
 
 **adflux-skills** 是一个面向 AI Agent 的技能包，通过 adflux 开放 API 提供 **AI 生图**、**AI 生视频** 能力。Agent 可以按用户的自然语言需求选择模型、上传本地参考素材、提交生成任务、轮询进度，并把最终的图片 / 视频下载到本地。
 
+视频侧支持 **视频编辑** 与 **视频延长**：用 `--video-task-type edit|extend` 提交，需模型 `capabilities.videoTaskTypes` 声明该类型，原片先 `upload.py` 上传。
+
 本技能遵循 `SKILL.md` 技能规范，可被 `npx skills` 以及支持该规范的 AI Agent 平台（Claude Code、Trae、CodeBuddy、Cursor、Codex 等）直接识别和调用。
 
 ## 📦 技能列表
@@ -133,6 +135,21 @@ python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --pro
   --resolution 720p --duration 5 --generate-type reference --reference https://example.com/a.jpg
 ```
 
+### 视频编辑 / 视频延长
+
+```bash
+# 编辑：--duration 取 upload.py 返回的 duration（服务端会覆盖），可加 --reference 参考图
+python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --video-task-type edit \
+  --resolution 720p --duration 6 --reference-video-id <原片ID> \
+  --reference https://example.com/product.jpg \
+  --prompt "把 @图片1 中的商品替换到 @视频1 对应位置，保持镜头、节奏、时长和其他画面不变"
+
+# 延长：--duration 是本次新增片段秒数（4~30s），产物只含续接片段
+python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --video-task-type extend \
+  --resolution 720p --duration 4 --reference-video-id <原片ID> \
+  --prompt "向后延长 @视频1，镜头继续推进，补充第二个卖点"
+```
+
 ### 轮询并下载
 
 ```bash
@@ -221,7 +238,7 @@ Authorization: Bearer <ADFLUX_API_KEY>
 
 - **参数不脑补**：用户未指定比例、分辨率、画质、数量时省略对应参数，交给服务端默认值
 - **先预估后提交**：需要展示预估积分时用 `--estimate`，不冻结积分
-- **结果落盘**：签名 URL 约 1 小时失效，用 `--download` 保存本地
+- **结果落盘**：结果 URL 按上游留存期（约 7 天）有效，用 `--download` 保存本地
 - **失败不伪造**：任务 `FAILED` / `CANCELLED` 时如实返回 `errorMessage`
 - **不自动重试提交**：生成接口无幂等，重复调用会重复冻结积分
 - **先 dry-run**：不确定的参数组合先加 `--dry-run` 检查请求
@@ -229,7 +246,7 @@ Authorization: Bearer <ADFLUX_API_KEY>
 ## ⚠️ 使用限制
 
 - **无幂等**：重复提交会重复冻结积分，重试前先确认上次是否已返回 `taskNo`
-- **结果 URL 1 小时失效**：用 `task_detail.py --download` 落盘，或过期后重新查询
+- **结果 URL 约 7 天有效**（按上游留存）：用 `task_detail.py --download` 落盘，或过期后重新查询
 - **并发共享**：图片生成与其他业务共用并发额度，高峰可能 `CONCURRENCY_TIMEOUT` 后自动退费
 - **字段范围**：仅支持本文档列出的开放字段；上传素材 ID（`reference*MaterialIds` / `firstFrameMaterialId` / `lastFrameMaterialId`）支持，其他内部字段传了会被拒绝或覆盖
 - **素材要求**：参考视频 / 参考音频必须先 `upload.py` 上传；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
