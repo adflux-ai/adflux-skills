@@ -115,7 +115,7 @@ user-invocable: true
    - 单段/合计时长不要超过 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec`
    - 参考素材上限按所选模型取，**2.5 与 2.5 flash 不同**：2.5 为图 30 / 视频 10 / 音频 10，2.5 flash 为图 10 / 视频 5 / 音频 5；统一看 `capabilities.maxReferenceImageCount` / `maxReferenceVideoCount` / `maxReferenceAudioCount`，不要按模型名硬套
    - 视频编辑 / 延长用 `--video-task-type` 显式声明（仅当 `capabilities.videoTaskTypes` 含该值）：
-     - `edit`（视频编辑）：必须恰好 1 个原片，通过 `--reference-video-id <ID>`（或 `--reference-video <URL>`）传入，长度 4~30s；`--duration` 取 `upload.py` 返回的 `duration`（服务端仍会用原片元数据覆盖）；不能传首尾帧；可同时传参考图（`--reference`），提示词用 `@图片N` 引用
+     - `edit`（视频编辑）：必须恰好 1 个原片，通过 `--reference-video-id <ID>`（或 `--reference-video <URL>`）传入，长度 4~30s；`--duration` 取 `upload.py` 返回的 `duration`（服务端仍会用原片元数据覆盖）；不能传首尾帧；可同时传参考图（`--reference`），提示词用 `@图片N` 引用；输出时长可能短于原片，以任务详情 `durationSeconds` 为准
      - `extend`（视频延长）：至少 1 个视频，第一个为原片，其余为额外参考视频；`--duration` 传本次**新增片段**秒数（4~30s，上限看模型能力），产物只含续接片段，不含原片；原片必须放第一位，参考视频只用一种来源（全部 `--reference-video` 或全部 `--reference-video-id`，混用会改变顺序）；可叠加参考图 / 参考音频
      - 两者固定 `generateType=reference`；`--resolution` 仍必填，取值以 `capabilities.resolution` 为准（如 480p / 720p），分辨率按传入档位生效；编辑 / 延长不支持设置比例，输出比例由服务端按原片覆盖
 3. 提交：`python scripts/generate_video.py --model <modelCode> --prompt "..." --resolution 720p --duration 5`
