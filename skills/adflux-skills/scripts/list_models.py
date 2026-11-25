@@ -9,7 +9,8 @@ import _client as client
 
 def main():
     parser = argparse.ArgumentParser(description="列出 adflux 可用模型")
-    parser.add_argument("--type", choices=["image", "video"], help="只列出指定类型，默认返回图片与视频")
+    parser.add_argument("--type", choices=["image", "video", "video_enhance"],
+                        help="只列出指定类型，默认返回图片、视频与画质提升")
     parser.add_argument("--dry-run", action="store_true", help="只打印请求，不发网络请求")
     args = parser.parse_args()
 

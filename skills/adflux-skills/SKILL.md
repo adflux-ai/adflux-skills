@@ -129,6 +129,17 @@ user-invocable: true
    - `--watch` 默认最多等 600 秒；视频可能更久，可加 `--max-wait 1800`，超时后继续用同一 `taskNo` 查询，不要重新提交
 5. 视频由平台定时任务结算，轮询到 `SUCCESS` 即完成，结果同样落盘后给本地路径
 
+### 视频画质提升
+
+输入现成视频，输出更高清的视频，内容不变；不需要提示词、时长、比例。
+
+1. `python scripts/list_models.py --type video_enhance` 确认可用参数（分辨率 720p / 1080p / 2k / 4k，版本 LITE，码率 low / medium / high）
+2. 输入视频必须是当前员工上传的素材：`python scripts/upload.py --file ./input.mp4`，拿返回的 `id`
+3. 预估：`python scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p --estimate`
+4. 提交：`python scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p`（如需调码率加 `--bitrate-level high`）
+5. 轮询并落盘：`python scripts/task_detail.py --task-no <taskNo> --watch --download ./adflux_results/<taskNo>`
+   - 产物会转存到平台自有存储并写入员工素材库，`resultUrl` 为签名地址；落盘后给本地路径
+
 ## 结果呈现
 
 任务结束后用固定结构回复（用户语言，默认中文）；宿主支持时同时展示图片预览或视频文件：
@@ -175,6 +186,7 @@ user-invocable: true
 | `scripts/list_models.py` | 列出可用模型 |
 | `scripts/generate_image.py` | 图片预估 / 提交（`--estimate` 只预估） |
 | `scripts/generate_video.py` | 视频预估 / 提交（`--estimate` 只预估；`--video-task-type` 支持 reference / edit / extend） |
+| `scripts/generate_enhance.py` | 视频画质提升预估 / 提交（`--estimate` 只预估；输入用 `--video-material-id` 或 `--video-url`） |
 | `scripts/task_detail.py` | 任务详情，`--watch` 自动轮询，`--download DIR` 下载结果到本地 |
 | `scripts/upload.py` | 上传本地图片 / 视频 / 音频 |
 

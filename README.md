@@ -11,9 +11,9 @@
 
 ## ✨ 简介
 
-**adflux-skills** 是一个面向 AI Agent 的技能包，通过 adflux 开放 API 提供 **AI 生图**、**AI 生视频** 能力。Agent 可以按用户的自然语言需求选择模型、上传本地参考素材、提交生成任务、轮询进度，并把最终的图片 / 视频下载到本地。
+**adflux-skills** 是一个面向 AI Agent 的技能包，通过 adflux 开放 API 提供 **AI 生图**、**AI 生视频**、**视频画质提升** 能力。Agent 可以按用户的自然语言需求选择模型、上传本地参考素材、提交生成任务、轮询进度，并把最终的图片 / 视频下载到本地。
 
-视频侧支持 **视频编辑** 与 **视频延长**：用 `--video-task-type edit|extend` 提交，需模型 `capabilities.videoTaskTypes` 声明该类型，原片先 `upload.py` 上传。
+视频侧支持 **视频编辑** 与 **视频延长**：用 `--video-task-type edit|extend` 提交，需模型 `capabilities.videoTaskTypes` 声明该类型，原片先 `upload.py` 上传。已有视频还可以做 **画质提升**：用 `generate_enhance.py` 选择 720p / 1080p / 2k / 4k 输出档位。
 
 本技能遵循 `SKILL.md` 技能规范，可被 `npx skills` 以及支持该规范的 AI Agent 平台（Claude Code、Trae、CodeBuddy、Cursor、Codex 等）直接识别和调用。
 
@@ -21,7 +21,7 @@
 
 | 技能 | 描述 | 主要脚本 |
 |------|------|----------|
-| **adflux-skills** | adflux 生图 / 生视频技能 — 查询模型、积分预估、提交任务、轮询进度并下载结果 | `generate_image.py` `generate_video.py` `task_detail.py` |
+| **adflux-skills** | adflux 生图 / 生视频 / 画质提升技能 — 查询模型、积分预估、提交任务、轮询进度并下载结果 | `generate_image.py` `generate_video.py` `generate_enhance.py` `task_detail.py` |
 
 ## 📥 快速安装
 
@@ -96,6 +96,7 @@ $env:ADFLUX_API_KEY = "adfk_xxxxxxxx"
 ```bash
 python3 skills/adflux-skills/scripts/list_models.py --type image
 python3 skills/adflux-skills/scripts/list_models.py --type video
+python3 skills/adflux-skills/scripts/list_models.py --type video_enhance
 ```
 
 各模型的分辨率、比例、数量等参数能力以返回的 `capabilities`（JSON Schema）为准；平台新增模型不需要升级技能。
@@ -150,6 +151,16 @@ python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --vid
   --prompt "向后延长 @视频1，镜头继续推进，补充第二个卖点"
 ```
 
+### 视频画质提升
+
+```bash
+# 输入视频先用 upload.py 上传，拿素材 ID（也可传 --video-url，必须是当前员工上传的素材）
+python3 skills/adflux-skills/scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p --estimate
+python3 skills/adflux-skills/scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p
+```
+
+`--resolution` 支持 720p / 1080p / 2k / 4k；`--variant` 默认 LITE；`--bitrate-level` 支持 low / medium / high（默认 medium）。
+
 ### 轮询并下载
 
 ```bash
@@ -190,6 +201,7 @@ adflux-skills/
             ├── list_models.py      # 模型列表
             ├── generate_image.py   # 图片预估 / 提交
             ├── generate_video.py   # 视频预估 / 提交
+            ├── generate_enhance.py # 视频画质提升预估 / 提交
             ├── task_detail.py      # 查询 / 轮询 / 下载
             └── upload.py           # 上传本地素材
 ```
@@ -212,6 +224,8 @@ Authorization: Bearer <ADFLUX_API_KEY>
 | `POST` | `/image/generate` | 提交图片生成任务 |
 | `POST` | `/video/estimate` | 视频积分预估（不冻结） |
 | `POST` | `/video/generate` | 提交视频生成任务 |
+| `POST` | `/video/enhance/estimate` | 视频画质提升积分预估（不冻结） |
+| `POST` | `/video/enhance/generate` | 提交视频画质提升任务 |
 | `GET` | `/task/detail?taskNo=` | 查询任务详情与结果 |
 | `GET` | `/model/simple-list?type=` | 可用模型列表 |
 | `POST` | `/material/upload` | 上传图片 / 视频 / 音频素材 |
@@ -249,7 +263,7 @@ Authorization: Bearer <ADFLUX_API_KEY>
 - **结果 URL 约 7 天有效**（按上游留存）：用 `task_detail.py --download` 落盘，或过期后重新查询
 - **并发共享**：图片生成与其他业务共用并发额度，高峰可能 `CONCURRENCY_TIMEOUT` 后自动退费
 - **字段范围**：仅支持本文档列出的开放字段；上传素材 ID（`reference*MaterialIds` / `firstFrameMaterialId` / `lastFrameMaterialId`）支持，其他内部字段传了会被拒绝或覆盖
-- **素材要求**：参考视频 / 参考音频必须先 `upload.py` 上传；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
+- **素材要求**：参考视频 / 参考音频必须先 `upload.py` 上传；画质提升的输入视频同样必须是当前员工上传的素材（素材 ID 或上传返回的 URL）；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
 
 ## 🤝 反馈与支持
 
