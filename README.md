@@ -15,7 +15,7 @@
 
 视频侧支持 **视频编辑** 与 **视频延长**：用 `--video-task-type edit|extend` 提交，需模型 `capabilities.videoTaskTypes` 声明该类型，原片先 `upload.py` 上传。已有视频还可以做 **画质提升**：用 `generate_enhance.py` 选择 720p / 1080p / 2k / 4k 输出档位。
 
-本技能遵循 `SKILL.md` 技能规范，可被 `npx skills` 以及支持该规范的 AI Agent 平台（Claude Code、Trae、CodeBuddy、Cursor、Codex 等）直接识别和调用。
+本技能遵循 `SKILL.md` 技能规范，可被 `npx skills` 以及支持该规范的 AI Agent 平台（Claude Code、Trae、WorkBuddy、Cursor、Codex 等）直接识别和调用。
 
 ## 📦 技能列表
 
