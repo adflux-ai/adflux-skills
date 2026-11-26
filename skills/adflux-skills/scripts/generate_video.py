@@ -58,7 +58,7 @@ def validate_edit_extend_args(parser, args, task_type):
                      "（服务端按 URL 在前合并，混用会导致原片顺序不符合预期）")
     videos = (args.reference_video or []) + (args.reference_video_id or [])
     if not videos:
-        parser.error(f"{label}需要 --reference-video 或 --reference-video-id 指定原片（需先 upload.py 上传）")
+        parser.error(f"{label}需要 --reference-video 或 --reference-video-id 指定原片（本地先 upload.py，站内已有素材先 list_materials.py）")
     if task_type == "edit" and len(videos) != 1:
         parser.error(f"视频编辑只能指定 1 个原片，当前 {len(videos)} 个")
 
@@ -108,15 +108,17 @@ def main():
                         help="生成方式：text（纯文生视频）/ reference / frame；省略时普通生成按 text，编辑 / 延长按 reference")
     parser.add_argument("--video-task-type", choices=VIDEO_TASK_TYPES, default=None,
                         help="视频任务类型：reference（默认）/ edit（视频编辑）/ extend（视频延长）")
-    parser.add_argument("--reference", action="append", metavar="URL", help="参考图公网 URL，可重复")
+    parser.add_argument("--reference", action="append", metavar="URL", help="参考图公网 URL（外部临时图片），可重复；站内或本地素材请用 --reference-image-id")
     parser.add_argument("--reference-image-id", action="append", type=int, metavar="ID",
-                        help="参考图素材 ID（upload.py 返回的 id），可重复")
-    parser.add_argument("--reference-video", action="append", metavar="URL", help="参考视频 URL（需先 upload.py 上传），可重复")
+                        help="参考图素材 ID（upload.py 或 list_materials.py 返回的 id），可重复")
+    parser.add_argument("--reference-video", action="append", metavar="URL",
+                        help="参考视频 URL（必须是当前员工名下素材地址，可先 upload.py 上传），可重复")
     parser.add_argument("--reference-video-id", action="append", type=int, metavar="ID",
-                        help="参考视频素材 ID（upload.py 返回的 id），可重复；编辑 / 延长时第一个为原片")
-    parser.add_argument("--reference-audio", action="append", metavar="URL", help="参考音频 URL（需先 upload.py 上传），可重复")
+                        help="参考视频素材 ID（upload.py 或 list_materials.py 返回的 id），可重复；编辑 / 延长时第一个为原片")
+    parser.add_argument("--reference-audio", action="append", metavar="URL",
+                        help="参考音频 URL（必须是当前员工名下素材地址，可先 upload.py 上传），可重复")
     parser.add_argument("--reference-audio-id", action="append", type=int, metavar="ID",
-                        help="参考音频素材 ID（upload.py 返回的 id），可重复")
+                        help="参考音频素材 ID（upload.py 或 list_materials.py 返回的 id），可重复")
     parser.add_argument("--first-frame-url", help="首帧图片 URL")
     parser.add_argument("--first-frame-id", type=int, metavar="ID", help="首帧图片素材 ID（与 --first-frame-url 二选一）")
     parser.add_argument("--last-frame-url", help="尾帧图片 URL（generateType=frame 必填）")

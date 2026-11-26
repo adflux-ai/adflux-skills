@@ -21,14 +21,14 @@ def validate_args(parser, args):
     if args.video_material_id and args.video_url:
         parser.error("--video-material-id 与 --video-url 只能传一个（优先用素材 ID）")
     if not args.video_material_id and not args.video_url:
-        parser.error("需要 --video-material-id 或 --video-url 指定输入视频（URL 必须是当前员工 upload.py 上传的素材）")
+        parser.error("需要 --video-material-id 或 --video-url 指定输入视频（视频必须是当前员工名下素材，上传或历史产物）")
 
 
 def main():
     parser = argparse.ArgumentParser(description="adflux 视频画质提升预估 / 生成")
     parser.add_argument("--video-material-id", type=int, metavar="ID",
-                        help="输入视频素材 ID（upload.py 返回的 id，优先使用）")
-    parser.add_argument("--video-url", help="输入视频 URL（必须是当前员工 upload.py 上传的素材）")
+                        help="输入视频素材 ID（upload.py 或 list_materials.py 返回的 id，优先使用）")
+    parser.add_argument("--video-url", help="输入视频 URL（必须是当前员工名下素材地址，上传或历史产物）")
     parser.add_argument("--resolution", required=True,
                         help="输出分辨率：720p / 1080p / 2k / 4k")
     parser.add_argument("--variant", default="LITE", help="画质提升版本，默认 LITE")

@@ -15,23 +15,22 @@
 
 视频侧支持 **视频编辑** 与 **视频延长**：用 `--video-task-type edit|extend` 提交，需模型 `capabilities.videoTaskTypes` 声明该类型，原片先 `upload.py` 上传。已有视频还可以做 **画质提升**：用 `generate_enhance.py` 选择 720p / 1080p / 2k / 4k 输出档位。
 
+生成产物会异步转存到平台自有存储；可用 `list_tasks.py` 按日期查看生成记录，用 `list_materials.py` 查看已有素材并复用素材 `id` 继续创作。
+
 本技能遵循 `SKILL.md` 技能规范，可被 `npx skills` 以及支持该规范的 AI Agent 平台（Claude Code、Trae、WorkBuddy、Cursor、Codex 等）直接识别和调用。
 
 ## 📦 技能列表
 
 | 技能 | 描述 | 主要脚本 |
 |------|------|----------|
-| **adflux-skills** | adflux 生图 / 生视频 / 画质提升技能 — 查询模型、积分预估、提交任务、轮询进度并下载结果 | `generate_image.py` `generate_video.py` `generate_enhance.py` `task_detail.py` |
+| **adflux-skills** | adflux 生图 / 生视频 / 画质提升技能 — 查询模型、积分预估、提交任务、轮询进度、下载结果，查询历史记录与素材 | `generate_image.py` `generate_video.py` `generate_enhance.py` `task_detail.py` `list_tasks.py` `list_materials.py` |
 
 ## 📥 快速安装
 
 通过 `npx skills` 一键安装技能：
 
 ```bash
-# 交互式选择要安装的技能
-npx skills add adflux-ai/adflux-skills
-
-# 直接安装指定技能
+# 安装技能（不指定 -g 时安装到当前项目）
 npx skills add adflux-ai/adflux-skills --skill adflux-skills
 
 # 安装到用户级（所有项目共用），并指定宿主
@@ -154,7 +153,7 @@ python3 skills/adflux-skills/scripts/generate_video.py --model <modelCode> --vid
 ### 视频画质提升
 
 ```bash
-# 输入视频先用 upload.py 上传，拿素材 ID（也可传 --video-url，必须是当前员工上传的素材）
+# 输入视频用素材 ID：新文件先 upload.py 上传，历史产物用 list_materials.py 查（也可传 --video-url，必须是当前员工名下素材）
 python3 skills/adflux-skills/scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p --estimate
 python3 skills/adflux-skills/scripts/generate_enhance.py --video-material-id <ID> --resolution 1080p
 ```
@@ -175,7 +174,9 @@ python3 skills/adflux-skills/scripts/task_detail.py --task-no <taskNo> --watch -
 python3 skills/adflux-skills/scripts/upload.py --file ./poster.png --tags "海报,产品"
 ```
 
-上传响应里的 `id` 是长期稳定的素材句柄，生成时优先用素材 ID 引用；`url` 只是约 1 小时的预览地址。参考图也可直接传公网 URL；参考视频 / 参考音频必须先上传。
+上传响应里的 `id` 是长期稳定的素材句柄，生成时优先用素材 ID 引用；`url` 只是约 1 小时的预览地址。参考图也可临时传公网 URL；参考视频 / 参考音频必须来自当前员工名下素材（上传或历史产物）。
+
+站内已有素材（含历史生成产物）无需重新上传：先 `list_materials.py` 查 `id`，生成时直接传 `--reference-*-id` 复用。
 
 所有脚本都支持 `--help` 与 `--dry-run`；`--dry-run` 只打印请求（Key 脱敏），不发网络请求。
 
@@ -203,6 +204,8 @@ adflux-skills/
             ├── generate_video.py   # 视频预估 / 提交
             ├── generate_enhance.py # 视频画质提升预估 / 提交
             ├── task_detail.py      # 查询 / 轮询 / 下载
+            ├── list_tasks.py       # 分页查询生成记录
+            ├── list_materials.py   # 分页查询素材（复用时取素材 ID）
             └── upload.py           # 上传本地素材
 ```
 
@@ -227,8 +230,10 @@ Authorization: Bearer <ADFLUX_API_KEY>
 | `POST` | `/video/enhance/estimate` | 视频画质提升积分预估（不冻结） |
 | `POST` | `/video/enhance/generate` | 提交视频画质提升任务 |
 | `GET` | `/task/detail?taskNo=` | 查询任务详情与结果 |
+| `GET` | `/task/page` | 分页查询生成记录（仅本 Key 员工、`source=open-api`，时间跨度 ≤31 天） |
 | `GET` | `/model/simple-list?type=` | 可用模型列表 |
 | `POST` | `/material/upload` | 上传图片 / 视频 / 音频素材 |
+| `GET` | `/material/page` | 分页查询素材（默认只返回开放任务产物 `source=TASK_OUTPUT`） |
 
 完整字段、错误码与调用限制以平台开放 API 文档为准。
 
@@ -252,7 +257,7 @@ Authorization: Bearer <ADFLUX_API_KEY>
 
 - **参数不脑补**：用户未指定比例、分辨率、画质、数量时省略对应参数，交给服务端默认值
 - **先预估后提交**：需要展示预估积分时用 `--estimate`，不冻结积分
-- **结果落盘**：结果 URL 按上游留存期（约 7 天）有效，用 `--download` 保存本地
+- **结果落盘**：产物转存到平台自有存储，结果 URL 为自有存储签名地址（约 1 小时有效；文件本身长期保存，过期重新查询即可），用 `--download` 保存本地
 - **失败不伪造**：任务 `FAILED` / `CANCELLED` 时如实返回 `errorMessage`
 - **不自动重试提交**：生成接口无幂等，重复调用会重复冻结积分
 - **先 dry-run**：不确定的参数组合先加 `--dry-run` 检查请求
@@ -260,10 +265,10 @@ Authorization: Bearer <ADFLUX_API_KEY>
 ## ⚠️ 使用限制
 
 - **无幂等**：重复提交会重复冻结积分，重试前先确认上次是否已返回 `taskNo`
-- **结果 URL 约 7 天有效**（按上游留存）：用 `task_detail.py --download` 落盘，或过期后重新查询
+- **结果 URL 约 1 小时有效**（自有存储签名，文件本身长期保存）：用 `task_detail.py --download` 落盘，或过期后重新查询
 - **并发共享**：图片生成与其他业务共用并发额度，高峰可能 `CONCURRENCY_TIMEOUT` 后自动退费
 - **字段范围**：仅支持本文档列出的开放字段；上传素材 ID（`reference*MaterialIds` / `firstFrameMaterialId` / `lastFrameMaterialId`）支持，其他内部字段传了会被拒绝或覆盖
-- **素材要求**：参考视频 / 参考音频必须先 `upload.py` 上传；画质提升的输入视频同样必须是当前员工上传的素材（素材 ID 或上传返回的 URL）；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
+- **素材要求**：参考视频 / 参考音频必须来自当前员工名下素材（`upload.py` 上传或 `list_materials.py` 查到的历史产物）；画质提升的输入视频同样如此（素材 ID 或该素材的 URL）；素材 ID 按 Key 绑定员工隔离；内网、回环地址会被拒绝
 
 ## 🤝 反馈与支持
 

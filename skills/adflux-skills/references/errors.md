@@ -38,13 +38,14 @@
 | 原片用了外链、未上传或属于他人 | 先 `upload.py` 上传，传当前 Key 绑定员工的素材 `id`（或上传返回的 `url`） |
 | `extend` 的新增片段时长不在 4~30s | 调整 `--duration`；`edit` 的 `--duration` 取 `upload.py` 返回的 `duration` 即可（服务端会覆盖） |
 | `frame` 缺首帧或尾帧 | 同时传首帧与尾帧（URL 或素材 ID） |
-| 参考视频/音频用了外部直链 | 先用 `upload.py` 上传，再传返回的 `id`（推荐）或 `url`（服务端需解析时长计费） |
+| 参考视频/音频用了外部直链 | 改用当前员工名下素材：新文件先 `upload.py` 上传，历史产物用 `list_materials.py` 查 `id`，再传 `id`（推荐）或 `url`（服务端需解析时长计费） |
 | 参考视频/音频时长超限 | 按 `capabilities.min/maxReferenceVideoDurationSec`、`maxReferenceVideoTotalSec`、`min/maxReferenceAudioDurationSec`、`maxReferenceAudioTotalSec` 调整 |
 | 参考素材是内网地址 | 换成公网可访问的 http/https URL |
 | 分辨率/比例的大小写与返回值不一致 | 按 `capabilities.resolution` / `capabilities.ratio` 原样传（如 `480P`、`768P`、`2K`） |
 | 传了站内素材库 ID 等内部字段 | 不支持，改用 `/material/upload` 返回的 `reference*MaterialIds` 或公网 URL |
-| 素材 ID 不存在 / 类型不符 / 跨员工 | 确认 `id` 来自当前 Key 绑定员工的 `upload.py` 上传结果，且媒体类型与字段匹配（图片 / 视频 / 音频） |
+| 素材 ID 不存在 / 类型不符 / 跨员工 | 确认 `id` 属于当前 Key 绑定员工（`upload.py` 上传或 `list_materials.py` 历史产物），且媒体类型与字段匹配（图片 / 视频 / 音频） |
 | 把素材 ID 传进了 `--reference` / `--first-frame-url` 等 URL 参数 | 会报「需要 http/https URL」；本地素材改用 `--reference-image-id` / `--reference-video-id` / `--reference-audio-id` / `--first-frame-id` / `--last-frame-id` |
+| `task/page` 查询的时间跨度超过 31 天 | 缩小 `--start` / `--end` 范围，或按天 / 分批查询 |
 
 ## 运行期问题
 
@@ -52,7 +53,7 @@
 |---|---|
 | 任务一直 `PENDING` / `RUNNING` | 图片任务在服务端异步执行；超过预期时间用 `task_detail.py` 继续查，必要时联系管理员 |
 | 轮询超时（退出码 1） | 任务仍在执行，用同一 `taskNo` 继续查询，必要时加大 `--max-wait`；禁止重新提交 |
-| `resultUrl` 打不开（403 / 过期） | 结果 URL 按上游留存约 7 天有效，过期后重新调 `task_detail.py` |
+| `resultUrl` 打不开（403 / 过期） | 开放 API 产物已转存自有存储，签名地址约 1 小时；重新调 `task_detail.py` 或 `list_materials.py` 获取新地址 |
 | `CONCURRENCY_TIMEOUT` | 图片并发额度被占满，稍后重试；失败会自动退费 |
 | `check.py` 报未配置环境变量 | 设置 `ADFLUX_API_KEY` 后重开终端 |
 | `check.py` 网络失败 | 先确认网络 / 代理能访问 adflux.cn；私有化部署时再核对自定义地址（可只填域名） |

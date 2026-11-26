@@ -30,9 +30,9 @@ def main():
     parser.add_argument("--width", type=int, help="自定义宽度")
     parser.add_argument("--height", type=int, help="自定义高度")
     parser.add_argument("--count", type=int, default=1, help="生成数量 1~15，默认 1")
-    parser.add_argument("--reference", action="append", metavar="URL", help="参考图公网 URL，可重复")
+    parser.add_argument("--reference", action="append", metavar="URL", help="参考图公网 URL（外部临时图片），可重复；站内或本地素材请用 --reference-image-id")
     parser.add_argument("--reference-image-id", action="append", type=int, metavar="ID",
-                        help="参考图素材 ID（upload.py 返回的 id），可重复")
+                        help="参考图素材 ID（upload.py 或 list_materials.py 返回的 id），可重复")
     parser.add_argument("--output-format", help="输出格式，默认由服务端决定（jpeg）")
     parser.add_argument("--watermark", action="store_true", help="添加水印")
     parser.add_argument("--estimate", action="store_true", help="只做积分预估，不提交任务")
